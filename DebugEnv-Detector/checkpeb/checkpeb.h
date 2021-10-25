@@ -1,5 +1,5 @@
 #ifndef _CHECKPEB_H_
-#define _CHECKPEB
+#define _CHECKPEB_H_
 #include <stdio.h>
 #include <windows.h>
 BOOL CheckPEBBeDbged();
