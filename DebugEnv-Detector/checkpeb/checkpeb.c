@@ -2,13 +2,15 @@
 BOOL CheckPEBBeDbged()
 {
 	int result = 0;
-	__asm
-	{
-		mov eax, fs:[30h]
-		mov eax, [eax + 68h]
-		and eax, 0x70
-		mov result, eax
-	}
+	asm(
+	"   mov     %%fs: 0x30, %%eax\n"
+	"   mov     0x2(%%eax), %%al\n"
+	"   mov     %%al, %0\n"
+	:"=m"(result)
+	:
+	:"memory", "esi", "edi", "eax", "ebx", "ecx", "edx"
+	);
+
 	return result != 0;
 }
 BOOL CheckProcHeap()
@@ -18,37 +20,45 @@ BOOL CheckProcHeap()
 	DWORD dwWindowsMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
 	if (dwWindowsMajorVersion == 5)
 	{
-		__asm
-		{
-			mov eax, fs:[30h]
-			mov eax, [eax + 18h]
-			mov eax, [eax + 0ch]
-			mov result, eax
-		}
+		asm(
+		"   movl     %%fs: 0x30, %%eax\n"
+		"   mov     0x18(%%eax), %%eax\n"
+		"   mov     0x0c(%%eax), %%eax\n"
+		"   mov     %%eax, %0\n"
+		:"=m"(result)
+		:
+		:"memory","esi","edi","eax","ebx","ecx","edx"
+		);
 	}
 	else
 	{
-		__asm
-		{
-			mov eax, fs:[30h]
-			mov eax, [eax + 18h]
-			mov eax, [eax + 40h]
-			mov result, eax
-		}
+
+		asm(
+		"   movl     %%fs: 0x30, %%eax\n"
+		"   mov     0x18(%%eax), %%eax\n"
+		"   mov     0x40(%%eax), %%eax\n"
+		"   mov     %%eax, %0\n"
+		:"=m"(result)
+		:
+		:"memory","esi","edi","eax","ebx","ecx","edx"
+		);
+		
 	}
 	return result != 2;
 }
 BOOL CheckNTGlobalFlag()  
-{  
-    int result = 0;  
-    __asm  
-    {  
-        mov eax, fs:[30h]  
-        mov eax, [eax + 68h]  
-        and eax, 0x70  
-        mov result, eax  
-    }  
-    return result != 0;  
+{
+	int result = 0;  
+	asm(
+	"   movl     %%fs: 0x30, %%eax\n"
+	"   mov     0x68(%%eax), %%eax\n"
+	"   and     $0x70, %%eax\n"
+	"   mov     %%eax, %0\n"
+	:"=m"(result)
+	:
+	:"memory","esi","edi","eax","ebx","ecx","edx"
+	);
+	return result != 0;  
 }  
 void CheckPEBPrint()
 {
