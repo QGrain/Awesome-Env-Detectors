@@ -12,10 +12,10 @@ BOOL Is_RegKeyExists(HKEY hKey, const TCHAR *lpSubKey) {
 
     RegCloseKey(hkResult);
 
-    return TRUE;
+    return 1;
   }
 
-  return FALSE;
+  return 0;
 }
 
 BOOL Is_RegKeyValueExists(HKEY hKey, const TCHAR *lpSubKey,
@@ -33,18 +33,18 @@ BOOL Is_RegKeyValueExists(HKEY hKey, const TCHAR *lpSubKey,
     if (RegQueryValueEx(hkResult, lpValueName, NULL, NULL, (LPBYTE)lpData,
                         &cbData) == ERROR_SUCCESS) {
 
-      if (StrStrI((PCTSTR)lpData, search_str) != NULL) {
+      if (StrStrI((LPCTSTR)lpData, search_str) != NULL) {
 
         RegCloseKey(hkResult);
 
-        return TRUE;
+        return 1;
       }
     }
 
     RegCloseKey(hkResult);
   }
 
-  return FALSE;
+  return 0;
 }
 
 DWORD GetProcessIdFromName(LPCTSTR szProcessName) {
@@ -60,7 +60,7 @@ DWORD GetProcessIdFromName(LPCTSTR szProcessName) {
     return 0;
   }
   pe32.dwSize = sizeof(PROCESSENTRY32);
-  if (Process32First(hSnapshot, &pe32) == FALSE) {
+  if (Process32First(hSnapshot, &pe32) == 0) {
     printf("Process32First\n");
     CloseHandle(hSnapshot);
     return 0;
@@ -87,14 +87,14 @@ PBYTE get_system_firmware(_In_ DWORD signature, _In_ DWORD table,
   void *pointer = GetProcAddress(hLib, "GetSystemFirmwareTable");
 
   DWORD bufferSize = 4096;
-  PBYTE firmwareTable = static_cast<PBYTE>(malloc(bufferSize));
+  PBYTE firmwareTable = (PBYTE)(malloc(bufferSize));
 
   if (firmwareTable == NULL)
     return NULL;
 
   SecureZeroMemory(firmwareTable, bufferSize);
 
-  auto GetSystemFirmwareTable = static_cast<pGetSystemFirmwareTable>(pointer);
+  pGetSystemFirmwareTable GetSystemFirmwareTable = (pGetSystemFirmwareTable)(pointer);
 
   DWORD resultBufferSize =
       GetSystemFirmwareTable(signature, table, firmwareTable, bufferSize);
@@ -107,7 +107,7 @@ PBYTE get_system_firmware(_In_ DWORD signature, _In_ DWORD table,
   if (resultBufferSize > bufferSize) {
     PBYTE tmp;
 
-    tmp = static_cast<BYTE *>(realloc(firmwareTable, resultBufferSize));
+    tmp = (BYTE *)(realloc(firmwareTable, resultBufferSize));
     if (tmp) {
       firmwareTable = tmp;
       SecureZeroMemory(firmwareTable, resultBufferSize);
@@ -128,10 +128,10 @@ BOOL find_str_in_data(PBYTE needle, size_t needleLen, PBYTE haystack,
                       size_t haystackLen) {
   for (size_t i = 0; i < haystackLen - needleLen; i++) {
     if (memcmp(&haystack[i], needle, needleLen) == 0) {
-      return TRUE;
+      return 1;
     }
   }
-  return FALSE;
+  return 0;
 }
 
 BOOL vmware_reg_keys() {
@@ -141,10 +141,10 @@ BOOL vmware_reg_keys() {
   WORD dwlength = sizeof(szKeys) / sizeof(szKeys[0]);
   for (int i = 0; i < dwlength; i++) {
     if (Is_RegKeyExists(HKEY_LOCAL_MACHINE, szKeys[i])) {
-      return true;
+      return 1;
     }
   }
-  return false;
+  return 0;
 }
 
 BOOL vmware_reg_key_value() {
@@ -176,26 +176,26 @@ BOOL vmware_reg_key_value() {
   for (int i = 0; i < dwLength; i++) {
     if (Is_RegKeyValueExists(HKEY_LOCAL_MACHINE, szEntries[i][0],
                              szEntries[i][1], szEntries[i][2])) {
-      return true;
+      return 1;
     }
   }
 
-  return false;
+  return 0;
 }
 
 BOOL vmware_firmware_SMBIOS() {
-  BOOL result = FALSE;
-  const DWORD Signature = static_cast<DWORD>('RSMB');
+  BOOL result = 0;
+  const DWORD Signature = (DWORD)('RSMB');
 
   DWORD smbiosSize = 0;
   PBYTE smbios =
-      get_system_firmware(static_cast<DWORD>('RSMB'), 0x0000, &smbiosSize);
+      get_system_firmware((DWORD)('RSMB'), 0x0000, &smbiosSize);
   if (smbios != NULL) {
     PBYTE vmwareString = (PBYTE) "VMware";
     size_t vmwwareStringLen = 6;
 
     if (find_str_in_data(vmwareString, vmwwareStringLen, smbios, smbiosSize)) {
-      result = TRUE;
+      result = 1;
     }
 
     free(smbios);
@@ -213,10 +213,10 @@ BOOL vmware_processes() {
   WORD iLength = sizeof(szProcesses) / sizeof(szProcesses[0]);
   for (int i = 0; i < iLength; i++) {
     if (GetProcessIdFromName(szProcesses[i])) {
-      return true;
+      return 1;
     }
   }
-  return false;
+  return 0;
 }
 
 void vmware() {
