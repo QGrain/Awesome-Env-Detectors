@@ -23,7 +23,7 @@ BOOL NTQryInfoProc()
 	HMODULE ntModule = LoadLibrary("Ntdll.dll");
 	NtQueryInformationProcessPtr NtQueryInformationProcess = (NtQueryInformationProcessPtr)GetProcAddress(ntModule, "NtQueryInformationProcess");
 	NtQueryInformationProcess(GetCurrentProcess(), 0x7, &debugPort, sizeof(debugPort), NULL);  
-    return debugPort != 0;  
+	return debugPort != 0;  
 }
 BOOL ErrValueTest()
 {
