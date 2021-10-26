@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-#ifdef WINVER
-// #define _X86_
-#include <windows.h>
-#include <winnt.h>
+#include "demo.h"
 
 BOOL Search0xCC(DWORD dwAddr, DWORD dwCodeSize)
 {
@@ -124,16 +118,41 @@ BOOL CheckExecTime()
     return CK_RESULT;
 }
 
-
-
-
-
-#else
-BOOL CheckINT3()
-{
-    return FALSE;
-}
-#endif
+/*
+BOOL CheckFatherProc()  
+{  
+    LONG                      status;    
+    DWORD                     dwParentPID = 0;    
+    HANDLE                    hProcess;    
+    PROCESS_BASIC_INFORMATION pbi;    
+    int pid = getpid();  
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);    
+    if(!hProcess)    
+        return -1;    
+    PNTQUERYINFORMATIONPROCESS  NtQueryInformationProcess = (PNTQUERYINFORMATIONPROCESS)GetProcAddress(GetModuleHandleA("ntdll"),"NtQueryInformationProcess");  
+    status = NtQueryInformationProcess(hProcess,SystemBasicInformation,(PVOID)&pbi,sizeof(PROCESS_BASIC_INFORMATION),NULL);  
+    PROCESSENTRY32 pe32;  
+    pe32.dwSize = sizeof(pe32);   
+    HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);   
+    if(hProcessSnap == INVALID_HANDLE_VALUE) {   
+        return FALSE;   
+    }  
+    BOOL bMore = Process32First(hProcessSnap, &pe32);   
+    while(bMore) {  
+        if (pbi.InheritedFromUniqueProcessId == pe32.th32ProcessID) {  
+            if (stricmp(pe32.szExeFile, "explorer.exe")==0) {  
+                CloseHandle(hProcessSnap);  
+                return FALSE;  
+            }  
+            else {  
+                CloseHandle(hProcessSnap);  
+                return TRUE;  
+            }  
+        }  
+        bMore = Process32Next(hProcessSnap, &pe32);   
+    }  
+    CloseHandle(hProcessSnap);  
+}*/
 
 
 int main(void)
@@ -155,7 +174,12 @@ int main(void)
         printf("[*] %-50s%10s\n","Execution time check","[ BAD ]");
     else
         printf("[*] %-50s%10s\n","Execution time check","[ GOOD ]");
-
+        
+    // if(CheckFatherProc() == TRUE)
+    //     printf("[*] %-50s%10s\n","Father process check","[ BAD ]");
+    // else
+    //     printf("[*] %-50s%10s\n","Father process check","[ GOOD ]");
+ 
     printf("Paused, waiting for user input: ");
     scanf("%c", &c);
     return 0;
