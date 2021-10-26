@@ -2,7 +2,7 @@
 void UpToLow(char *a, int max)
 {
 	int i=0;
-	while(a[i]!=0&&i<max)
+	while(a[i] <= 90 && a[i] >= 65)
 	{
 		if(a[i]<97)
 		{
@@ -12,16 +12,17 @@ void UpToLow(char *a, int max)
 	}
 }
 BOOL CALLBACK EnumWndProc(HWND hwnd, LPARAM lParam)    
-{    
-    char cur_window[1024];  
-    GetWindowTextA(hwnd, cur_window, 1023);  
+{
+	char cur_window[1024];
+	memset(cur_window, 0, 1024);
+	GetWindowTextA(hwnd, cur_window, 1023);
 	UpToLow(cur_window, 1024);
-    if (strstr(cur_window, "windbg")!=NULL || strstr(cur_window, "x32dbg")!=NULL || strstr(cur_window, "ollyice")!=NULL || strstr(cur_window, "ollydbg")!=NULL || strstr(cur_window, "immunity")!=NULL)  
-    {  
-        *((BOOL*)lParam) = TRUE;  
-    }  
-    return TRUE;  
-}   
+	if (strstr(cur_window, "windbg")!=NULL || strstr(cur_window, "x32dbg")!=NULL || strstr(cur_window, "ollyice")!=NULL || strstr(cur_window, "ollydbg")!=NULL || strstr(cur_window, "immunity")!=NULL)  
+	{  
+		*((BOOL*)lParam) = TRUE;
+	}  
+	return TRUE;
+}
 BOOL WindowChck()
 {
 	BOOL ret = FALSE;
@@ -71,7 +72,7 @@ BOOL DbgProcCheck()
 	
 	while (bMore)
 	{
-		if (stricmp(pe32.szExeFile, "OllyDBG.EXE") == 0 || stricmp(pe32.szExeFile, "OllyICE.exe") == 0 || stricmp(pe32.szExeFile, "x64_dbg.exe") == 0 || stricmp(pe32.szExeFile, "windbg.exe") == 0 || stricmp(pe32.szExeFile, "ImmunityDebugger.exe") == 0)
+		if (stricmp(pe32.szExeFile, "OllyDBG.EXE") == 0 || stricmp(pe32.szExeFile, "OllyICE.exe") == 0 || stricmp(pe32.szExeFile, "x64dbg.exe") == 0 || stricmp(pe32.szExeFile, "x32dbg.exe") == 0 || stricmp(pe32.szExeFile, "windbg.exe") == 0 || stricmp(pe32.szExeFile, "ImmunityDebugger.exe") == 0)
 		{
 			return TRUE;
 		}
