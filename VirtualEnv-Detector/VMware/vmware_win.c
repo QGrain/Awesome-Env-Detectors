@@ -163,14 +163,9 @@ BOOL check_mac_addr(const TCHAR *szMac) {
 
   pAdapterInfo = (PIP_ADAPTER_INFO)MALLOC(sizeof(IP_ADAPTER_INFO));
   if (pAdapterInfo == NULL) {
-    _tprintf(_T("Error allocating memory needed to call GetAdaptersinfo.\n"));
     return -1;
   }
-
   DWORD dwResult = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen);
-
-  // Make an initial call to GetAdaptersInfo to get the necessary size into the
-  // ulOutBufLen variable
   if (dwResult == ERROR_BUFFER_OVERFLOW) {
     FREE(pAdapterInfo);
     pAdapterInfo = (PIP_ADAPTER_INFO)MALLOC(ulOutBufLen);
@@ -178,23 +173,15 @@ BOOL check_mac_addr(const TCHAR *szMac) {
       printf("Error allocating memory needed to call GetAdaptersinfo\n");
       return 1;
     }
-
-    // Now, we can call GetAdaptersInfo
     dwResult = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen);
   }
-
   if (dwResult == ERROR_SUCCESS) {
-    // Convert the given mac address to an array of multibyte chars so we can
-    // compare.
     CHAR szMacMultiBytes[4];
     for (int i = 0; i < 4; i++) {
       szMacMultiBytes[i] = (CHAR)szMac[i];
     }
-
     pAdapterInfoPtr = pAdapterInfo;
-
     while (pAdapterInfoPtr) {
-
       if (pAdapterInfoPtr->AddressLength == 6 &&
           !memcmp(szMacMultiBytes, pAdapterInfoPtr->Address, 3)) {
         bResult = TRUE;
@@ -212,6 +199,9 @@ BOOL check_mac_addr(const TCHAR *szMac) {
 BOOL vmware_reg_keys() {
   const TCHAR *szKeys[] = {
       _T("SOFTWARE\\VMware, Inc.\\VMware Tools"),
+      _T("SOFTWARE\\VMware, Inc.\\VMware Drivers"),
+      _T("SOFTWARE\\VMware, Inc.\\VMware VGAuth"),
+      _T("SOFTWARE\\VMware, Inc.\\VMwareHostOpen"),
   };
   WORD dwlength = sizeof(szKeys) / sizeof(szKeys[0]);
   for (int i = 0; i < dwlength; i++) {
@@ -296,19 +286,13 @@ BOOL vmware_processes() {
 BOOL vmware_files() {
   BOOL flag = 0;
   const TCHAR *szPaths[] = {
-      _T("System32\\drivers\\vmnet.sys"),
       _T("System32\\drivers\\vmmouse.sys"),
       _T("System32\\drivers\\vmusb.sys"),
       _T("System32\\drivers\\vm3dmp.sys"),
-      _T("System32\\drivers\\vmci.sys"),
       _T("System32\\drivers\\vmhgfs.sys"),
       _T("System32\\drivers\\vmmemctl.sys"),
-      _T("System32\\drivers\\vmx86.sys"),
       _T("System32\\drivers\\vmrawdsk.sys"),
       _T("System32\\drivers\\vmusbmouse.sys"),
-      _T("System32\\drivers\\vmkdb.sys"),
-      _T("System32\\drivers\\vmnetuserif.sys"),
-      _T("System32\\drivers\\vmnetadapter.sys"),
   };
 
   WORD dwlength = sizeof(szPaths) / sizeof(szPaths[0]);
@@ -364,6 +348,26 @@ BOOL vmware_mac() {
   return 0;
 }
 
+BOOL vmware_service() {
+
+  char *known_services[] = {"vmhgfs",       "VMMemCtl",     "vmmouse",
+                            "vmrawdsk",     "vmusbmouse",   "vm3dmp",
+                            "vm3dmp-debug", "vm3dmp-stats", "vm3dmp_loader"};
+  ENUM_SERVICE_STATUS services[5000];
+  int bytesNeeded, servicesNum;
+  SC_HANDLE sc_handle = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE,
+                                      SC_MANAGER_ENUMERATE_SERVICE);
+  EnumServicesStatus(sc_handle, SERVICE_DRIVER, SERVICE_STATE_ALL, services,
+                     sizeof(services), &bytesNeeded, &servicesNum, NULL);
+
+  for (int i = 0; i < servicesNum; i++) {
+
+    for (int j = 0; j < 9; j++)
+      if (strcmp(services[i].lpServiceName, known_services[j]) == 0)
+        return 1;
+  }
+  return 0;
+}
 void vmware() {
   char *s[2] = {"[ GOOD ]", "[ BAD  ]"};
   printf("[*] %-50s%10s\n", "VMWareRegKeys", s[vmware_reg_keys()]);
@@ -373,9 +377,6 @@ void vmware() {
   printf("[*] %-50s%10s\n", "VMWareMacAddress", s[vmware_mac()]);
   printf("[*] %-50s%10s\n", "VMWareFile", s[vmware_files()]);
   printf("[*] %-50s%10s\n", "VMWareDir", s[vmware_dir()]);
+  printf("[*] %-50s%10s\n", "VMWareService", s[vmware_service()]);
 }
 
-int main()
-{
-  vmware();
-}
