@@ -1,7 +1,7 @@
 CC=gcc
 CXX=g++
-CFLAGS+=-O2 -m32 -std=c99
-CXXFLAGS+=-O2 -m32
+CFLAGS+=-O2
+CXXFLAGS+=-O2
 
 TARGET=VirtualEnv-Detector
 SRCS=VirtualEnv-Detector.c
@@ -15,6 +15,8 @@ else
 	RM=del
 	EXT=.exe
 	SRCS+=VMware\vmware_win.c
+	CFLAGS+=-m32 -std=c99
+	CXXFLAGS+=-m32
 endif
 
 # 支持att&t和intel语法的内联汇编
