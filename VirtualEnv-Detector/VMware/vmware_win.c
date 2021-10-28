@@ -2,6 +2,16 @@
 
 #define API_COUNT (sizeof(ApiData) / sizeof(*ApiData))
 typedef UINT(WINAPI *pGetSystemFirmwareTable)(DWORD, DWORD, PVOID, DWORD);
+typedef BOOL(WINAPI *pIsWow64Process)(HANDLE, PBOOL);
+
+BOOL Is_Wow64() {
+  BOOL bIsWow64 = FALSE;
+  HMODULE hLib = LoadLibraryA("kernel32.dll");
+  pIsWow64Process IsWow64Process =
+      (pIsWow64Process)GetProcAddress(hLib, "IsWow64Process");
+  IsWow64Process(GetCurrentProcess(), &bIsWow64);
+  return bIsWow64;
+}
 
 BOOL Is_RegKeyExists(HKEY hKey, const TCHAR *lpSubKey) {
 
@@ -81,8 +91,7 @@ DWORD GetProcessIdFromName(LPCTSTR szProcessName) {
   return 0;
 }
 
-PBYTE get_system_firmware(_In_ DWORD signature, _In_ DWORD table,
-                          _Out_ PDWORD pBufferSize) {
+PBYTE get_system_firmware(DWORD signature, DWORD table, PDWORD pBufferSize) {
   HMODULE hLib = LoadLibraryA("kernel32.dll");
   void *pointer = GetProcAddress(hLib, "GetSystemFirmwareTable");
 
@@ -94,7 +103,8 @@ PBYTE get_system_firmware(_In_ DWORD signature, _In_ DWORD table,
 
   SecureZeroMemory(firmwareTable, bufferSize);
 
-  pGetSystemFirmwareTable GetSystemFirmwareTable = (pGetSystemFirmwareTable)(pointer);
+  pGetSystemFirmwareTable GetSystemFirmwareTable =
+      (pGetSystemFirmwareTable)(pointer);
 
   DWORD resultBufferSize =
       GetSystemFirmwareTable(signature, table, firmwareTable, bufferSize);
@@ -124,14 +134,79 @@ PBYTE get_system_firmware(_In_ DWORD signature, _In_ DWORD table,
   return firmwareTable;
 }
 
-BOOL find_str_in_data(PBYTE needle, size_t needleLen, PBYTE haystack,
-                      size_t haystackLen) {
+BOOL find_strdata(PBYTE needle, size_t needleLen, PBYTE haystack,
+                  size_t haystackLen) {
   for (size_t i = 0; i < haystackLen - needleLen; i++) {
     if (memcmp(&haystack[i], needle, needleLen) == 0) {
       return 1;
     }
   }
   return 0;
+}
+
+BOOL is_FileExists(TCHAR *szPath) {
+  DWORD dwAttrib = GetFileAttributes(szPath);
+  return (dwAttrib != INVALID_FILE_ATTRIBUTES) &&
+         !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+BOOL is_DirectoryExists(TCHAR *szPath) {
+  DWORD dwAttrib = GetFileAttributes(szPath);
+  return (dwAttrib != INVALID_FILE_ATTRIBUTES) &&
+         (dwAttrib & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+BOOL check_mac_addr(const TCHAR *szMac) {
+  BOOL bResult = FALSE;
+  PIP_ADAPTER_INFO pAdapterInfo, pAdapterInfoPtr;
+  ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
+
+  pAdapterInfo = (PIP_ADAPTER_INFO)MALLOC(sizeof(IP_ADAPTER_INFO));
+  if (pAdapterInfo == NULL) {
+    _tprintf(_T("Error allocating memory needed to call GetAdaptersinfo.\n"));
+    return -1;
+  }
+
+  DWORD dwResult = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen);
+
+  // Make an initial call to GetAdaptersInfo to get the necessary size into the
+  // ulOutBufLen variable
+  if (dwResult == ERROR_BUFFER_OVERFLOW) {
+    FREE(pAdapterInfo);
+    pAdapterInfo = (PIP_ADAPTER_INFO)MALLOC(ulOutBufLen);
+    if (pAdapterInfo == NULL) {
+      printf("Error allocating memory needed to call GetAdaptersinfo\n");
+      return 1;
+    }
+
+    // Now, we can call GetAdaptersInfo
+    dwResult = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen);
+  }
+
+  if (dwResult == ERROR_SUCCESS) {
+    // Convert the given mac address to an array of multibyte chars so we can
+    // compare.
+    CHAR szMacMultiBytes[4];
+    for (int i = 0; i < 4; i++) {
+      szMacMultiBytes[i] = (CHAR)szMac[i];
+    }
+
+    pAdapterInfoPtr = pAdapterInfo;
+
+    while (pAdapterInfoPtr) {
+
+      if (pAdapterInfoPtr->AddressLength == 6 &&
+          !memcmp(szMacMultiBytes, pAdapterInfoPtr->Address, 3)) {
+        bResult = TRUE;
+        break;
+      }
+      pAdapterInfoPtr = pAdapterInfoPtr->Next;
+    }
+  }
+
+  FREE(pAdapterInfo);
+
+  return bResult;
 }
 
 BOOL vmware_reg_keys() {
@@ -188,13 +263,12 @@ BOOL vmware_firmware_SMBIOS() {
   const DWORD Signature = (DWORD)('RSMB');
 
   DWORD smbiosSize = 0;
-  PBYTE smbios =
-      get_system_firmware((DWORD)('RSMB'), 0x0000, &smbiosSize);
+  PBYTE smbios = get_system_firmware((DWORD)('RSMB'), 0x0000, &smbiosSize);
   if (smbios != NULL) {
     PBYTE vmwareString = (PBYTE) "VMware";
     size_t vmwwareStringLen = 6;
 
-    if (find_str_in_data(vmwareString, vmwwareStringLen, smbios, smbiosSize)) {
+    if (find_strdata(vmwareString, vmwwareStringLen, smbios, smbiosSize)) {
       result = 1;
     }
 
@@ -219,25 +293,89 @@ BOOL vmware_processes() {
   return 0;
 }
 
+BOOL vmware_files() {
+  BOOL flag = 0;
+  const TCHAR *szPaths[] = {
+      _T("System32\\drivers\\vmnet.sys"),
+      _T("System32\\drivers\\vmmouse.sys"),
+      _T("System32\\drivers\\vmusb.sys"),
+      _T("System32\\drivers\\vm3dmp.sys"),
+      _T("System32\\drivers\\vmci.sys"),
+      _T("System32\\drivers\\vmhgfs.sys"),
+      _T("System32\\drivers\\vmmemctl.sys"),
+      _T("System32\\drivers\\vmx86.sys"),
+      _T("System32\\drivers\\vmrawdsk.sys"),
+      _T("System32\\drivers\\vmusbmouse.sys"),
+      _T("System32\\drivers\\vmkdb.sys"),
+      _T("System32\\drivers\\vmnetuserif.sys"),
+      _T("System32\\drivers\\vmnetadapter.sys"),
+  };
+
+  WORD dwlength = sizeof(szPaths) / sizeof(szPaths[0]);
+  TCHAR szWinDir[MAX_PATH] = _T("");
+  TCHAR szPath[MAX_PATH] = _T("");
+  PVOID OldValue = NULL;
+  int wow64 = Is_Wow64();
+  GetWindowsDirectory(szWinDir, MAX_PATH);
+  if (wow64) {
+    Wow64DisableWow64FsRedirection(&OldValue);
+  }
+  for (int i = 0; i < dwlength; i++) {
+    PathCombine(szPath, szWinDir, szPaths[i]);
+    if (is_FileExists(szPath)) {
+      flag = 1;
+      break;
+    }
+  }
+  if (wow64)
+    Wow64RevertWow64FsRedirection(&OldValue);
+  return flag;
+}
+
+BOOL vmware_dir() {
+  TCHAR szProgramFile[MAX_PATH];
+  TCHAR szPath[MAX_PATH] = _T("");
+  TCHAR szTarget[MAX_PATH] = _T("VMWare\\");
+
+  int wow64 = Is_Wow64();
+  if (wow64)
+    ExpandEnvironmentStrings(_T("%ProgramW6432%"), szProgramFile,
+                             ARRAYSIZE(szProgramFile));
+  else
+    SHGetSpecialFolderPath(NULL, szProgramFile, CSIDL_PROGRAM_FILES, FALSE);
+  PathCombine(szPath, szProgramFile, szTarget);
+  return is_DirectoryExists(szPath);
+}
+
+BOOL vmware_mac() {
+  const TCHAR *szMac[][2] = {
+      {_T("\x00\x05\x69"), _T("00:05:69")},
+      {_T("\x00\x0C\x29"), _T("00:0c:29")},
+      {_T("\x00\x1C\x14"), _T("00:1C:14")},
+      {_T("\x00\x50\x56"), _T("00:50:56")},
+  };
+
+  WORD dwLength = sizeof(szMac) / sizeof(szMac[0]);
+
+  for (int i = 0; i < dwLength; i++) {
+    if (check_mac_addr(szMac[i][0]))
+      return 1;
+  }
+  return 0;
+}
+
 void vmware() {
-  if (vmware_reg_keys()) {
-    printf("[*] %-50s%10s\n", "VMWareRegKeys", "[ BAD  ]");
-  } else {
-    printf("[*] %-50s%10s\n", "VMWareRegKeys", "[ GOOD ]");
-  }
-  if (vmware_reg_key_value()) {
-    printf("[*] %-50s%10s\n", "VMWareRegKeyValue", "[ BAD  ]");
-  } else {
-    printf("[*] %-50s%10s\n", "VMWareRegKeyValue", "[ GOOD ]");
-  }
-  if (vmware_firmware_SMBIOS()) {
-    printf("[*] %-50s%10s\n", "VMWareFirmware", "[ BAD  ]");
-  } else {
-    printf("[*] %-50s%10s\n", "VMWareFirmware", "[ GOOD ]");
-  }
-  if (vmware_processes()) {
-    printf("[*] %-50s%10s\n", "VMWareProcess", "[ BAD  ]");
-  } else {
-    printf("[*] %-50s%10s\n", "VMWareProcess", "[ GOOD ]");
-  }
+  char *s[2] = {"[ GOOD ]", "[ BAD  ]"};
+  printf("[*] %-50s%10s\n", "VMWareRegKeys", s[vmware_reg_keys()]);
+  printf("[*] %-50s%10s\n", "VMWareRegKeyValue", s[vmware_reg_key_value()]);
+  printf("[*] %-50s%10s\n", "VMWareFirmware", s[vmware_firmware_SMBIOS()]);
+  printf("[*] %-50s%10s\n", "VMWareProcess", s[vmware_processes()]);
+  printf("[*] %-50s%10s\n", "VMWareMacAddress", s[vmware_mac()]);
+  printf("[*] %-50s%10s\n", "VMWareFile", s[vmware_files()]);
+  printf("[*] %-50s%10s\n", "VMWareDir", s[vmware_dir()]);
+}
+
+int main()
+{
+  vmware();
 }
