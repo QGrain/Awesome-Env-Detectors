@@ -1,7 +1,7 @@
 CC=gcc
 CXX=g++
-CFLAGS+=-O2
-CXXFLAGS+=-O2
+CFLAGS+=-O2 -m32 -std=c99
+CXXFLAGS+=-O2 -m32
 
 TARGET=VirtualEnv-Detector
 SRCS=VirtualEnv-Detector.c
