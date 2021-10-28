@@ -64,7 +64,7 @@ int notify_warning_win(const char *env, const char *title, int confidence, int m
 int notify_warning_linux(const char *env, const char *title, int confidence, int max_conf)
 {
     char cmd[512] = {0};
-    sprintf(cmd, "zenity --question --width=240 --height=120 --title=\'%s\' --text=\'You are in %s.\nconfidence level = %d (max=3)\nExit\';echo $?;", env, title, confidence);
+    sprintf(cmd, "zenity --question --width=240 --height=120 --title=\'%s\' --text=\'You are in %s.\nconfidence level = %d (max=3)\nExit\';echo $?;", title, env, confidence);
     char output[255] = {0};
     FILE *fp;
 
