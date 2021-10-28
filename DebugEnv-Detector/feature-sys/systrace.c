@@ -1,14 +1,14 @@
 #include "systrace.h"
 void UpToLow(char *a, int max)
 {
-	int i=0;
-	while(a[i] <= 90 && a[i] >= 65)
+	int i = 0;
+	while(a[i] != 0)
 	{
-		if(a[i]<97)
+		if(a[i] >= 65 && a[i] <= 90)
 		{
-			a[i]=a[i]+('a'-'A');
+			a[i] = a[i] + ('a'-'A');
 		}
-		i=i+1;
+		++i;
 	}
 }
 BOOL CALLBACK EnumWndProc(HWND hwnd, LPARAM lParam)    

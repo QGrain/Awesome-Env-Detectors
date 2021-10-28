@@ -28,15 +28,19 @@ TARGET=DebugEnv-Detector
 # SRC_DIRS=. feature-api
 # EX_FILES=
 # SRCS=$(filter-out ${EX_FILES}, $(foreach dir, $(SRC_DIRS), $(wildcard $(addprefix $(dir)/*, .c))))
-SRCS=DebugEnv-Detector.c feature-api\antidbgwinapi.c
+SRCS=DebugEnv-Detector.c feature-api\antidbgwinapi.c feature-sys\systrace.c feature-behavior\antidbgbehavior.c
 
 # basename 返回一个字符串 . 之前的所有字段,即去掉后缀，同时addsuffix 加上后缀.o
 OBJS=$(addsuffix .o, $(basename $(SRCS)))
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS)  $(OBJS)  -o $@
-	
-# antidbgwinapi.o: feature-api/antidbgwinapi.c
+
+# feature-api\antidbgwinapi.o: feature-api\antidbgwinapi.c
+# 	$(CC) $(CFLAGS)  -c $^  -o $@
+# feature-sys\systrace.o: feature-sys\systrace.c
+# 	$(CC) $(CFLAGS)  -c $^  -o $@
+# feature-behavior\antidbgbehavior.o: feature-behavior\antidbgbehavior.c
 # 	$(CC) $(CFLAGS)  -c $^  -o $@
 # DebugEnv-Detector.o: DebugEnv-Detector.c
 # 	$(CC) $(CFLAGS)  -c $^  -o $@

@@ -166,18 +166,16 @@ HH:MM:SS
 
 #### 3.1.2 日志输出方式：
 
-- 输出到stdout
-- 输出到run.log
+- 输出到stdout，输出到run.log
 
 ### 3.2 检测结果输出标准
 
 #### 3.2.1 命令行输出
 
-- 将检测项目及其结果输出到stdout
-- 输出格式如下：
+- 将检测项目及其结果输出到stdout，输出格式如下：
 
 ```bash
-# 还没想好，可参考https://github.com/LordNoteworthy/al-khaser的输出格式
+# 可参考https://github.com/LordNoteworthy/al-khaser的输出格式
 ```
 
 #### 3.2.2 图形化输出（optional，视时间人手情况而定）
@@ -185,7 +183,7 @@ HH:MM:SS
 - 在拥有桌面系统的环境里，可以图形化输出检测结果
 - 输出格式待定
 	- 如Windows下弹出一个message box
-	- 如Linux下采用zenity或notify-send或whiptail或dialog实现弹窗（美观性由高到低）
+	- 如Linux下采用zenity或notify-send或whiptail或dialog实现弹窗**（美观性由高到低）**
 
 ## 4 实验设计
 
