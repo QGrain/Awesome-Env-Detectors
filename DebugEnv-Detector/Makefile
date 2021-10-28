@@ -28,7 +28,7 @@ TARGET=DebugEnv-Detector
 # SRC_DIRS=. feature-api
 # EX_FILES=
 # SRCS=$(filter-out ${EX_FILES}, $(foreach dir, $(SRC_DIRS), $(wildcard $(addprefix $(dir)/*, .c))))
-SRCS=DebugEnv-Detector.c feature-api\antidbgwinapi.c feature-sys\systrace.c feature-behavior\antidbgbehavior.c
+SRCS=DebugEnv-Detector.c feature-api\antidbgwinapi.c feature-sys\systrace.c feature-behavior\antidbgbehavior.c checkpeb\checkpeb.c
 
 # basename 返回一个字符串 . 之前的所有字段,即去掉后缀，同时addsuffix 加上后缀.o
 OBJS=$(addsuffix .o, $(basename $(SRCS)))
