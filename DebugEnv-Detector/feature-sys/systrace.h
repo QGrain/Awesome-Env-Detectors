@@ -9,5 +9,5 @@ BOOL CALLBACK EnumWndProc(HWND, LPARAM);
 BOOL WindowChck();
 BOOL RegAedbg();
 BOOL DbgProcCheck();
-void SysTracePrint();
+int SysTracePrint();
 #endif

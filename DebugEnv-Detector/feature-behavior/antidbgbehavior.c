@@ -201,37 +201,59 @@ BOOL CheckSeDbgPrivilege()
 }
 
 
-void AntiDbgBehaviorPrint()
+int AntiDbgBehaviorPrint()
 {
-    if(CheckINT3() == TRUE)
+    int confidence = 0;
+
+    if(CheckINT3() == TRUE) {
         printf("[*] %-50s%10s\n","INT3 check","[ BAD  ]");
-    else
+        confidence += 1;
+    }
+    else {
         printf("[*] %-50s%10s\n","INT3 check","[ GOOD ]");
+    }
 
-    if(CheckDebugReg() == TRUE)
+    if(CheckDebugReg() == TRUE) {
         printf("[*] %-50s%10s\n","Debug Registers check","[ BAD  ]");
-    else
+        confidence += 1;
+    }
+    else {
         printf("[*] %-50s%10s\n","Debug Registers check","[ GOOD ]");
+    }
 
-    if(CheckExecTime() == TRUE)
+    if(CheckExecTime() == TRUE) {
         printf("[*] %-50s%10s\n","Execution time check","[ BAD  ]");
-    else
+        confidence += 1;
+    }
+    else {
         printf("[*] %-50s%10s\n","Execution time check","[ GOOD ]");
+    }
         
-    if(CheckFatherProc() == TRUE)
+    if(CheckFatherProc() == TRUE) {
         printf("[*] %-50s%10s\n","Father process check","[ BAD  ]");
-    else
+        confidence += 1;
+    }
+    else {
         printf("[*] %-50s%10s\n","Father process check","[ GOOD ]");
+    }
 
-    if(CheckStartInfo() == TRUE)
+    if(CheckStartInfo() == TRUE) {
         printf("[*] %-50s%10s\n","Start info check","[ BAD  ]");
-    else
+        confidence += 1;
+    }
+    else {
         printf("[*] %-50s%10s\n","Start info check","[ GOOD ]");
+    }
 
-    if(CheckSeDbgPrivilege() == TRUE)
+    if(CheckSeDbgPrivilege() == TRUE) {
         printf("[*] %-50s%10s\n","SeDebugPrevilege check","[ BAD  ]");
-    else
+        confidence += 1;
+    }
+    else {
         printf("[*] %-50s%10s\n","SeDebugPrivilege check","[ GOOD ]");
+    }
+
+    return confidence;
 }
 
 

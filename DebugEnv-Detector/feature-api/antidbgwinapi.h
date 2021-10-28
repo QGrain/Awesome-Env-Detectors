@@ -12,5 +12,5 @@ BOOL IsDbgPr();
 BOOL ChkRmtDbgPr();
 BOOL NTQryInfoProc();
 BOOL ErrValueTest();
-void AntiDbgWinApiPrint();
+int AntiDbgWinApiPrint();
 #endif

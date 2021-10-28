@@ -1,4 +1,6 @@
 #include "antidbgwinapi.h"
+
+
 BOOL IsDbgPr()
 {
 	BOOL (_stdcall *IsDbgPrPtr)();
@@ -6,6 +8,7 @@ BOOL IsDbgPr()
 	IsDbgPrPtr = (BOOL (_stdcall *)())GetProcAddress(k32Module, "IsDebuggerPresent"); 
 	return IsDbgPrPtr();
 }
+
 
 BOOL ChkRmtDbgPr()
 {
@@ -17,6 +20,7 @@ BOOL ChkRmtDbgPr()
 	return flag;
 }
 
+
 BOOL NTQryInfoProc()
 {
 	int debugPort = 0;
@@ -25,6 +29,8 @@ BOOL NTQryInfoProc()
 	NtQueryInformationProcess(GetCurrentProcess(), 0x7, &debugPort, sizeof(debugPort), NULL);  
 	return debugPort != 0;  
 }
+
+
 BOOL ErrValueTest()
 {
 	DWORD errorValue = 10000;
@@ -39,40 +45,43 @@ BOOL ErrValueTest()
 		return FALSE;
 	}
 }
-void AntiDbgWinApiPrint()
+
+
+int AntiDbgWinApiPrint()
 {
+	int confidence = 0;
 	
-	if (IsDbgPr())
-	{
+	if (IsDbgPr()) {
 		printf("[*] %-50s%10s\n","IsDebuggerPresent API","[ BAD  ]");
+		confidence += 1;
 	}
-	else
-	{
+	else {
 		printf("[*] %-50s%10s\n","IsDebuggerPresent API","[ GOOD ]");
 	}
-	if(ChkRmtDbgPr())
-	{
+
+	if(ChkRmtDbgPr()) {
 		printf("[*] %-50s%10s\n","CheckRemoteDebuggerPresent API","[ BAD  ]");
+		confidence += 1;
 	}
-	else
-	{
+	else {
 		printf("[*] %-50s%10s\n","CheckRemoteDebuggerPresent API","[ GOOD ]");
 	}
-	if(NTQryInfoProc())
-	{
+
+	if(NTQryInfoProc()) {
 		printf("[*] %-50s%10s\n","NtQueryInformationProcess API","[ BAD  ]");
+		confidence += 1;
 	}
-	else
-	{
+	else {
 		printf("[*] %-50s%10s\n","NtQueryInformationProcess API","[ GOOD ]");
 	}
-	if(ErrValueTest())
-	{
+
+	if(ErrValueTest()) {
 		printf("[*] %-50s%10s\n","ErrorValueTest","[ BAD  ]");
+		confidence += 1;
 	}
-	else
-	{
+	else {
 		printf("[*] %-50s%10s\n","ErrorValueTest","[ GOOD ]");
 	}
 
+	return confidence;
 }

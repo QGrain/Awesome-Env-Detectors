@@ -5,5 +5,5 @@
 BOOL CheckPEBBeDbged();
 BOOL CheckProcHeap();
 BOOL CheckNTGlobalFlag();
-void CheckPEBPrint();
+int CheckPEBPrint();
 #endif

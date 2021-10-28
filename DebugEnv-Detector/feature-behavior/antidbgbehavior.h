@@ -35,6 +35,6 @@ BOOL CheckExecTime();
 BOOL CheckFatherProc();
 BOOL CheckStartInfo();
 BOOL CheckSeDbgPrivilege();
-void AntiDbgBehaviorPrint();
+int AntiDbgBehaviorPrint();
 
 #endif
