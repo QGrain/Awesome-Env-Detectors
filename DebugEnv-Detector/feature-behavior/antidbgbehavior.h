@@ -1,5 +1,5 @@
-#ifndef _DEMO_H_
-#define _DEMO_H_
+#ifndef _ANTIDBGBEHAVIOR_H_
+#define _ANTIDBGBEHAVIOR_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,5 +15,8 @@ BOOL CheckINT3();
 BOOL CheckDebugReg();
 BOOL CheckExecTime();
 // BOOL CheckFatherProc();
+BOOL CheckStartInfo();
+// BOOL CheckSeDbgPrivilege();
+void AntiDbgBehaviorPrint();
 
 #endif
