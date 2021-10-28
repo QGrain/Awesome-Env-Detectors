@@ -16,6 +16,7 @@ int main()
 
     printf("\n=================== Detect from System Traces ==================\n");
     SysTracePrint();
+    CheckPEBPrint();
 
     printf("\n================== Detect from Debugger Behavior ===============\n");
     AntiDbgBehaviorPrint();
