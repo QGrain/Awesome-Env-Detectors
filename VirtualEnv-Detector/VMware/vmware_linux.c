@@ -37,12 +37,12 @@ int check_oui(void)
 	}
 
 	ifn = ifc.ifc_len / sizeof(struct ifreq);
-	fprintf(stdout, "total iface number: %d\n", ifn);
+	// fprintf(stdout, "total iface number: %d\n", ifn);
 
 	int i = 0;
 	char mac[MACLEN];
 	while (i < ifn) {
-		fprintf(stdout, "iface name: %s\n", buf[i].ifr_name);
+		// fprintf(stdout, "iface name: %s\n", buf[i].ifr_name);
 		if (!ioctl(fd, SIOCGIFHWADDR, (char*)&buf[i])) {
 			memset(mac, 0, sizeof(mac));
 			snprintf(mac, MACLEN, "%02X:%02X:%02X:%02X:%02X:%02X",
@@ -52,7 +52,7 @@ int check_oui(void)
 					(unsigned char)buf[i].ifr_hwaddr.sa_data[3], 
 					(unsigned char)buf[i].ifr_hwaddr.sa_data[4], 
 					(unsigned char)buf[i].ifr_hwaddr.sa_data[5]);
-			fprintf(stdout, "mac addr: %s\n", mac);
+			// fprintf(stdout, "mac addr: %s\n", mac);
 
 			// distinguish virtual environment
 			for(int i = 0; i < 2; ++i) {
@@ -80,20 +80,20 @@ int check_vmcpu(void)
 {
     FILE * fp;
     char *p = "VMware";
-    char buf[1024];
+    char buf[1280];
 	int ck_result = 0;
     memset(buf, 0, sizeof(buf));
+
     if(NULL == (fp = popen("lscpu", "r"))) {
         fprintf(stderr, "execute lscpu failed: %s", strerror(errno));  
         return -1;
-    }   
-    while(NULL != fread( buf, sizeof(char), sizeof(buf), fp)) {
-		// printf("%s", buf);
-		if(strstr(buf, p)) {
-			ck_result = 1;
-			goto Exit;
-		}
     }
+
+    int ret = fread(buf, sizeof(char), sizeof(buf), fp);
+	if(strstr(buf, p)) {
+		ck_result = 1;
+		goto Exit;
+	}
 
 Exit:
     pclose(fp);
@@ -111,18 +111,17 @@ int check_vmtool(void)
         fprintf(stderr, "execute vmware-toolbox-cmd failed: %s", strerror(errno));
         return -1;
     }
-    while(NULL != fgets(buffer, sizeof(buffer), fp)) {
-		// printf("%s", buffer);
-		if(buffer[0] >= '0' && buffer[0] <= '9') {
-			// printf("this is vmware\n");
-			ck_result = 1;
-			goto Exit;
-		}
-    }  
+
+    char *ret = fgets(buffer, sizeof(buffer), fp);
+	if(buffer[0] >= '0' && buffer[0] <= '9') {
+		// printf("this is vmware\n");
+		ck_result = 1;
+		goto Exit;
+	}  
 
 Exit:
     pclose(fp);
-    return 0; 
+    return ck_result; 
 }
 
 

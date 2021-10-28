@@ -10,7 +10,7 @@ SRCS=VirtualEnv-Detector.c
 ifeq ($(linux),true)
 	RM=rm
 	EXT=
-	SRCS+=VMware\vmware_linux.c
+	SRCS+=VMware/vmware_linux.c
 else
 	RM=del
 	EXT=.exe
