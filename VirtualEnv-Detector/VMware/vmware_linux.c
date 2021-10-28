@@ -19,6 +19,7 @@ const char* vbox_oui[2] = {"08:00:27", "52:54:00"};
 int check_oui(void)
 {
 	int fd;
+	int ck_result = 0;
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		perror("create socket");
 		return -1;
@@ -55,15 +56,23 @@ int check_oui(void)
 
 			// distinguish virtual environment
 			for(int i = 0; i < 2; ++i) {
-				if(strncmp(mac, vm_oui[i], OUILEN) == 0)
-					fprintf(stdout, "VMWare environment.\n");
-				if(strncmp(mac, vbox_oui[i], OUILEN) == 0) 
-					fprintf(stdout, "VirtualBox environment.\n");
+				if(strncmp(mac, vm_oui[i], OUILEN) == 0) {
+					// fprintf(stdout, "VMWare environment.\n");
+					ck_result = 1;
+					goto Exit;
+				}
+				if(strncmp(mac, vbox_oui[i], OUILEN) == 0) {
+					// fprintf(stdout, "VirtualBox environment.\n");
+					ck_result = 2;
+					goto Exit;
+				}
 			}
 		}
 		++i;
 	}
-	return 0;
+
+Exit:
+	return ck_result;
 }
 
 
@@ -72,22 +81,23 @@ int check_vmcpu(void)
     FILE * fp;
     char *p = "VMware";
     char buf[1024];
-    memset(buf, '\0', sizeof(buf));
-    if(NULL == (fp = popen("lscpu", "r"))) {     
-        fprintf(stderr, "execute command failed: %s", strerror(errno));      
-        return -1;      
+	int ck_result = 0;
+    memset(buf, 0, sizeof(buf));
+    if(NULL == (fp = popen("lscpu", "r"))) {
+        fprintf(stderr, "execute lscpu failed: %s", strerror(errno));  
+        return -1;
     }   
-    while(NULL != fread( buf, sizeof(char), sizeof(buf), fp)) {  
-		printf("%s", buf);    
+    while(NULL != fread( buf, sizeof(char), sizeof(buf), fp)) {
+		// printf("%s", buf);
 		if(strstr(buf, p)) {
-			printf("this is vmware\n");
+			ck_result = 1;
+			goto Exit;
 		}
-		else {
-			printf("this is not vmware\n");
-		}
-    }  
+    }
+
+Exit:
     pclose(fp);
-    return 0;   
+    return ck_result;
 }
 
 
@@ -95,30 +105,51 @@ int check_vmtool(void)
 {
     FILE * fp;
     char buffer[80];
-    if(NULL == (fp = popen("vmware-toolbox-cmd -v", "r"))) {     
-        fprintf(stderr, "execute command failed: %s", strerror(errno));      
-        return -1;      
-    }   
-    while(NULL != fgets(buffer, sizeof(buffer), fp)) {  
-		printf("%s", buffer); 
+	int ck_result = 0;
+
+    if(NULL == (fp = popen("vmware-toolbox-cmd -v", "r"))) {
+        fprintf(stderr, "execute vmware-toolbox-cmd failed: %s", strerror(errno));
+        return -1;
+    }
+    while(NULL != fgets(buffer, sizeof(buffer), fp)) {
+		// printf("%s", buffer);
 		if(buffer[0] >= '0' && buffer[0] <= '9') {
-			printf("this is vmware\n");
-		}
-        else {
-			printf("this is not vmware\n");
+			// printf("this is vmware\n");
+			ck_result = 1;
+			goto Exit;
 		}
     }  
 
+Exit:
     pclose(fp);
     return 0; 
 }
 
 
-/* only used for test */
-int main(int argc, char* argv[])
+void CkVmLinuxPrint()
 {
-	check_oui();
-	check_vmcpu();
-	check_vmtool();
-	return 0;
+    if(check_oui() == 1)
+        printf("[*] %-50s%10s\n","MAC Address check","[ BAD  ]");
+    else
+        printf("[*] %-50s%10s\n","MAC Address check","[ GOOD ]");
+
+    if(check_vmcpu() == 1)
+        printf("[*] %-50s%10s\n","VM CPU check(VMware)","[ BAD  ]");
+	else if(check_vmcpu() == 2)
+        printf("[*] %-50s%10s\n","VM CPU check(VirtualBox)","[ BAD  ]");
+    else
+        printf("[*] %-50s%10s\n","VM CPU check","[ GOOD ]");
+
+    if(check_vmtool() == 1)
+        printf("[*] %-50s%10s\n","VMware Tools check","[ BAD  ]");
+    else
+        printf("[*] %-50s%10s\n","VMware Tools check","[ GOOD ]");
 }
+
+
+/* only used for test */
+// int main(int argc, char* argv[])
+// {
+// 	CkVmLinuxPrint();
+// 	return 0;
+// }
