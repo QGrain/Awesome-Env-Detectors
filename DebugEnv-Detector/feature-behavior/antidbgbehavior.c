@@ -124,40 +124,40 @@ BOOL CheckExecTime()
 }
 
 
-// BOOL CheckFatherProc()  
-// {  
-//     LONG                      status;    
-//     DWORD                     dwParentPID = 0;    
-//     HANDLE                    hProcess;    
-//     PROCESS_BASIC_INFORMATION pbi;    
-//     int pid = getpid();  
-//     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);    
-//     if(!hProcess)    
-//         return -1;    
-//     PNTQUERYINFORMATIONPROCESS  NtQueryInformationProcess = (PNTQUERYINFORMATIONPROCESS)GetProcAddress(GetModuleHandleA("ntdll"),"NtQueryInformationProcess");  
-//     status = NtQueryInformationProcess(hProcess,SystemBasicInformation,(PVOID)&pbi,sizeof(PROCESS_BASIC_INFORMATION),NULL);  
-//     PROCESSENTRY32 pe32;  
-//     pe32.dwSize = sizeof(pe32);   
-//     HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);   
-//     if(hProcessSnap == INVALID_HANDLE_VALUE) {   
-//         return FALSE;   
-//     }  
-//     BOOL bMore = Process32First(hProcessSnap, &pe32);   
-//     while(bMore) {  
-//         if (pbi.InheritedFromUniqueProcessId == pe32.th32ProcessID) {  
-//             if (stricmp(pe32.szExeFile, "explorer.exe")==0) {  
-//                 CloseHandle(hProcessSnap);  
-//                 return FALSE;  
-//             }  
-//             else {  
-//                 CloseHandle(hProcessSnap);  
-//                 return TRUE;  
-//             }  
-//         }  
-//         bMore = Process32Next(hProcessSnap, &pe32);   
-//     }  
-//     CloseHandle(hProcessSnap);  
-// }
+BOOL CheckFatherProc()  
+{  
+    LONG                      status;    
+    DWORD                     dwParentPID = 0;    
+    HANDLE                    hProcess;    
+    PROCESS_BASIC_INFORMATION pbi;    
+    int pid = getpid();  
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);    
+    if(!hProcess)    
+        return -1;    
+    PNTQUERYINFORMATIONPROCESS  NtQueryInformationProcess = (PNTQUERYINFORMATIONPROCESS)GetProcAddress(GetModuleHandleA("ntdll"),"NtQueryInformationProcess");  
+    status = NtQueryInformationProcess(hProcess,SystemBasicInformation,(PVOID)&pbi,sizeof(PROCESS_BASIC_INFORMATION),NULL);  
+    PROCESSENTRY32 pe32;  
+    pe32.dwSize = sizeof(pe32);   
+    HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);   
+    if(hProcessSnap == INVALID_HANDLE_VALUE) {   
+        return FALSE;   
+    }  
+    BOOL bMore = Process32First(hProcessSnap, &pe32);   
+    while(bMore) {  
+        if (pbi.InheritedFromUniqueProcessId == pe32.th32ProcessID) {  
+            if (stricmp(pe32.szExeFile, "explorer.exe") == 0 || stricmp(pe32.szExeFile, "cmd.exe") || stricmp(pe32.szExeFile, "powershell.exe")) {  
+                CloseHandle(hProcessSnap);  
+                return FALSE;  
+            }  
+            else {  
+                CloseHandle(hProcessSnap);  
+                return TRUE;  
+            }  
+        }  
+        bMore = Process32Next(hProcessSnap, &pe32);   
+    }  
+    CloseHandle(hProcessSnap);  
+}
 
 
 BOOL CheckStartInfo()  
@@ -173,38 +173,37 @@ BOOL CheckStartInfo()
 }
 
 
-// BOOL CheckSeDbgPrivilege()
-// {  
-//     DWORD ID;
-//     DWORD ret = 0;
-//     PROCESSENTRY32 pe32;
-//     pe32.dwSize = sizeof(pe32); 
-//     HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-//     if(hProcessSnap == INVALID_HANDLE_VALUE) {
-//         return FALSE;
-//     }
-//     BOOL bMore = Process32First(hProcessSnap, &pe32);
-//     while(bMore) {
-//         if (strcmp(pe32.szExeFile, "csrss.exe")==0) {
-//             ID = pe32.th32ProcessID;
-//             break;
-//         }
-//         bMore = Process32Next(hProcessSnap, &pe32);
-//     }
-//     CloseHandle(hProcessSnap);
-//     if (OpenProcess(PROCESS_QUERY_INFORMATION, NULL, ID) != NULL) {
-//         return TRUE;
-//     }
-//     else {
-//         return FALSE;
-//     }
-// }
+BOOL CheckSeDbgPrivilege()
+{  
+    DWORD ID;
+    DWORD ret = 0;
+    PROCESSENTRY32 pe32;
+    pe32.dwSize = sizeof(pe32); 
+    HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if(hProcessSnap == INVALID_HANDLE_VALUE) {
+        return FALSE;
+    }
+    BOOL bMore = Process32First(hProcessSnap, &pe32);
+    while(bMore) {
+        if (strcmp(pe32.szExeFile, "csrss.exe")==0) {
+            ID = pe32.th32ProcessID;
+            break;
+        }
+        bMore = Process32Next(hProcessSnap, &pe32);
+    }
+    CloseHandle(hProcessSnap);
+    if (OpenProcess(PROCESS_QUERY_INFORMATION, NULL, ID) != NULL) {
+        return TRUE;
+    }
+    else {
+        return FALSE;
+    }
+}
 
 
 void AntiDbgBehaviorPrint()
 {
     if(CheckINT3() == TRUE)
-        // printf("INT3 detected, you are being debuged\n");
         printf("[*] %-50s%10s\n","INT3 check","[ BAD  ]");
     else
         printf("[*] %-50s%10s\n","INT3 check","[ GOOD ]");
@@ -219,20 +218,20 @@ void AntiDbgBehaviorPrint()
     else
         printf("[*] %-50s%10s\n","Execution time check","[ GOOD ]");
         
-    // if(CheckFatherProc() == TRUE)
-    //     printf("[*] %-50s%10s\n","Father process check","[ BAD ]");
-    // else
-    //     printf("[*] %-50s%10s\n","Father process check","[ GOOD ]");
+    if(CheckFatherProc() == TRUE)
+        printf("[*] %-50s%10s\n","Father process check","[ BAD  ]");
+    else
+        printf("[*] %-50s%10s\n","Father process check","[ GOOD ]");
 
     if(CheckStartInfo() == TRUE)
         printf("[*] %-50s%10s\n","Start info check","[ BAD  ]");
     else
         printf("[*] %-50s%10s\n","Start info check","[ GOOD ]");
 
-    // if(CheckSeDbgPrivilege() == TRUE)
-    //     printf("[*] %-50s%10s\n","SeDebugPrevilege check","[ BAD ]");
-    // else
-    //     printf("[*] %-50s%10s\n","SeDebugPrivilege check","[ GOOD ]");
+    if(CheckSeDbgPrivilege() == TRUE)
+        printf("[*] %-50s%10s\n","SeDebugPrevilege check","[ BAD  ]");
+    else
+        printf("[*] %-50s%10s\n","SeDebugPrivilege check","[ GOOD ]");
 }
 
 

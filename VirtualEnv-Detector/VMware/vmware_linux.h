@@ -18,5 +18,6 @@
 int check_oui(void);
 int check_vmcpu(void);
 int check_vmtool(void);
+void CkVmLinuxPrint();
 
 #endif
