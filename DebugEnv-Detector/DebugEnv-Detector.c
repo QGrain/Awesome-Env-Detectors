@@ -1,10 +1,8 @@
-#include "feature-api/antidbgwinapi.h"
-#include "feature-sys/systrace.h"
-#include "feature-behavior/antidbgbehavior.h"
-#include "checkpeb/checkpeb.h"
+#include "DebugEnv-Detector.h"
 
 
 void PrintStart();
+void Quit();
 
 
 int main()
@@ -20,7 +18,10 @@ int main()
 
     printf("\n================== Detect from Debugger Behavior ===============\n");
     AntiDbgBehaviorPrint();
+
+    Quit();
 }
+
 
 void PrintStart()
 {
@@ -35,4 +36,11 @@ void PrintStart()
 "                         |___/                                                              \n");
 
     printf("\nDebug Environment Detector v1.0, by Group 6\n");
+}
+
+
+void Quit()
+{
+    printf("\nWe done here, have a good day~ (Press any key to quit)\n");
+    getchar();
 }
