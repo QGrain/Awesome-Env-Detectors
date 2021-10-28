@@ -3,20 +3,58 @@
 
 void PrintStart();
 void Quit();
+int notify_warning(int confidence);
 
 
 int main()
 {
     PrintStart();
+    int confidence = 0;
+    int quit = 0;
 #ifdef _WIN32
     printf("\n==================== Detect Windows Virtual Env ===================\n");
-    vmware();
+    confidence = vmware();
+    
 #else
     printf("\n==================== Detect Linux Virtual Env  ====================\n");
-    CkVmLinuxPrint();
+    confidence = CkVmLinuxPrint();
+    if(confidence > 0) {
+        quit = notify_warning(confidence);
+    }
+
+    if(quit == 1) {
+        goto Quit;
+    }
 #endif
+
+    printf("\nYou choose to continue.\n");
+    
+Quit:
     Quit();
 }
+
+
+int notify_warning(int confidence)
+{
+    char cmd[512] = {0};
+    sprintf(cmd, "zenity --question --width=240 --height=120 --title=\'Warning by VirtualEnv-Detector\' --text=\'You are in Virtual Environment.\nconfidence level = %d (max=3)\nExit\';echo $?;", confidence);
+    char output[255] = {0};
+    FILE *fp;
+
+    //0-是 1-否
+    if((fp = popen(cmd, "r")) != NULL) {
+        char *ret = fgets(output, 255, fp);
+        pclose(fp);
+    }
+
+    if(output[0] == '1') {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
 
 void PrintStart()
 {

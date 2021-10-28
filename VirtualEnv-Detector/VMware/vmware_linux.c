@@ -22,7 +22,7 @@ int check_oui(void)
 	int ck_result = 0;
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		perror("create socket");
-		return -1;
+		return 0;
 	}
 
 	struct ifconf ifc;
@@ -33,7 +33,7 @@ int check_oui(void)
 	ifc.ifc_buf = (caddr_t)buf;
 	if (ioctl(fd, SIOCGIFCONF, (char*)&ifc)) {
 		perror("get iface conf");
-		return -1;
+		return 0;
 	}
 
 	ifn = ifc.ifc_len / sizeof(struct ifreq);
@@ -86,7 +86,7 @@ int check_vmcpu(void)
 
     if(NULL == (fp = popen("lscpu", "r"))) {
         fprintf(stderr, "execute lscpu failed: %s", strerror(errno));  
-        return -1;
+        return 0;
     }
 
     int ret = fread(buf, sizeof(char), sizeof(buf), fp);
@@ -109,7 +109,7 @@ int check_vmtool(void)
 
     if(NULL == (fp = popen("vmware-toolbox-cmd -v", "r"))) {
         fprintf(stderr, "execute vmware-toolbox-cmd failed: %s", strerror(errno));
-        return -1;
+        return 0;
     }
 
     char *ret = fgets(buffer, sizeof(buffer), fp);
@@ -125,24 +125,39 @@ Exit:
 }
 
 
-void CkVmLinuxPrint()
+int CkVmLinuxPrint()
 {
-    if(check_oui() == 1)
+	int confidence = 0;
+    if(check_oui() == 1) {
         printf("[*] %-50s%10s\n","MAC Address check","[ BAD  ]");
-    else
+		confidence += 1;
+	}
+    else {
         printf("[*] %-50s%10s\n","MAC Address check","[ GOOD ]");
+	}
 
-    if(check_vmcpu() == 1)
+    if(check_vmcpu() == 1) {
         printf("[*] %-50s%10s\n","VM CPU check(VMware)","[ BAD  ]");
-	else if(check_vmcpu() == 2)
+		confidence += 1;
+	}
+	else if(check_vmcpu() == 2) {
         printf("[*] %-50s%10s\n","VM CPU check(VirtualBox)","[ BAD  ]");
-    else
+		confidence += 1;
+	}
+    else {
         printf("[*] %-50s%10s\n","VM CPU check","[ GOOD ]");
+	}
 
-    if(check_vmtool() == 1)
+    if(check_vmtool() == 1) {
         printf("[*] %-50s%10s\n","VMware Tools check","[ BAD  ]");
-    else
+		confidence += 1;
+	}
+    else {
         printf("[*] %-50s%10s\n","VMware Tools check","[ GOOD ]");
+	}
+
+	// confidence belong to [0, 3]
+	return confidence;
 }
 
 
