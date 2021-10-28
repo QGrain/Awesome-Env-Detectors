@@ -12,4 +12,4 @@ BOOL vmware_reg_keys();
 BOOL vmware_reg_key_value();
 BOOL vmware_firmware_SMBIOS();
 BOOL vmware_processes();
-void vmware();
+int vmware();

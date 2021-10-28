@@ -219,24 +219,29 @@ BOOL vmware_processes() {
   return 0;
 }
 
-void vmware() {
+int vmware() {
+  int confidence = 0;
   if (vmware_reg_keys()) {
     printf("[*] %-50s%10s\n", "VMWareRegKeys", "[ BAD  ]");
+    confidence += 1;
   } else {
     printf("[*] %-50s%10s\n", "VMWareRegKeys", "[ GOOD ]");
   }
   if (vmware_reg_key_value()) {
     printf("[*] %-50s%10s\n", "VMWareRegKeyValue", "[ BAD  ]");
+    confidence += 1;
   } else {
     printf("[*] %-50s%10s\n", "VMWareRegKeyValue", "[ GOOD ]");
   }
   if (vmware_firmware_SMBIOS()) {
     printf("[*] %-50s%10s\n", "VMWareFirmware", "[ BAD  ]");
+    confidence += 1;
   } else {
     printf("[*] %-50s%10s\n", "VMWareFirmware", "[ GOOD ]");
   }
   if (vmware_processes()) {
     printf("[*] %-50s%10s\n", "VMWareProcess", "[ BAD  ]");
+    confidence += 1;
   } else {
     printf("[*] %-50s%10s\n", "VMWareProcess", "[ GOOD ]");
   }
