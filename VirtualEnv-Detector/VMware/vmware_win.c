@@ -245,4 +245,5 @@ int vmware() {
   } else {
     printf("[*] %-50s%10s\n", "VMWareProcess", "[ GOOD ]");
   }
+  return confidence;
 }
